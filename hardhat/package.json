@@ -1,0 +1,13 @@
+{
+  "name": "arc-dex",
+  "version": "1.0.0",
+  "description": "Arc Testnet uzerinde basit bir DEX (Uniswap V2 tarzi AMM)",
+  "scripts": {
+    "deploy": "hardhat run scripts/deploy.js --network arcTestnet"
+  },
+  "devDependencies": {
+    "hardhat": "^2.22.0",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "dotenv": "^16.4.5"
+  }
+}

@@ -1,0 +1,795 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#0A0F1C;
+    --panel:#121A2B;
+    --panel-2:#182238;
+    --line:#232E45;
+    --copper:#C9803F;
+    --copper-soft:#3A2A1C;
+    --teal:#3FA796;
+    --red:#E2574C;
+    --text:#E9ECF3;
+    --muted:#8791A6;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  #arc-dex-root{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:0 0 60px 0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .arc-topbar{
+    width:100%;
+    max-width:1000px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:22px 20px 10px 20px;
+  }
+  .arc-logo{
+    display:flex;align-items:center;gap:10px;
+  }
+  .arc-logo-mark{
+    width:32px;height:32px;border-radius:8px;
+    background:linear-gradient(135deg,var(--copper),#8F5A28);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-weight:600;color:#0A0F1C;font-size:15px;
+  }
+  .arc-logo-text{
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;letter-spacing:0.2px;
+  }
+  .arc-logo-sub{
+    font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:0.5px;
+    margin-top:1px;
+  }
+  .arc-net-badge{
+    font-family:var(--mono);font-size:11px;color:var(--teal);
+    background:rgba(63,167,150,0.1);border:1px solid rgba(63,167,150,0.35);
+    padding:4px 10px;border-radius:20px;display:flex;align-items:center;gap:6px;
+  }
+  .arc-net-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);}
+  .arc-net-dot.off{background:var(--red);}
+  .arc-net-badge.off{color:var(--red);background:rgba(226,87,76,0.1);border-color:rgba(226,87,76,0.35);}
+
+  .arc-connect-btn{
+    font-family:'Inter',sans-serif;font-weight:600;font-size:13.5px;
+    background:var(--copper);color:#1A1206;border:none;
+    padding:10px 18px;border-radius:10px;cursor:pointer;
+    transition:transform .12s ease, background .12s ease;
+  }
+  .arc-connect-btn:hover{background:#D9924F;transform:translateY(-1px);}
+  .arc-connect-btn.connected{
+    background:var(--panel-2);color:var(--text);border:1px solid var(--line);
+    font-family:var(--mono);font-size:12.5px;
+  }
+
+  .arc-ticker{
+    width:100%;max-width:1000px;margin:14px 20px 0 20px;width:calc(100% - 40px);
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:10px 16px;font-family:var(--mono);font-size:12px;color:var(--muted);
+    display:flex;gap:24px;overflow-x:auto;white-space:nowrap;
+  }
+  .arc-ticker b{color:var(--teal);font-weight:600;}
+
+  .arc-shell{
+    width:100%;max-width:460px;margin-top:28px;padding:0 20px;
+  }
+  .arc-tabs{
+    display:flex;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;padding:4px;margin-bottom:16px;gap:4px;
+  }
+  .arc-tab{
+    flex:1;text-align:center;padding:9px 4px;border-radius:9px;font-size:13px;
+    font-weight:600;color:var(--muted);cursor:pointer;user-select:none;
+    transition:background .12s ease, color .12s ease;
+  }
+  .arc-tab.active{background:var(--copper-soft);color:var(--copper);}
+
+  .arc-card{
+    background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:18px;
+  }
+  .arc-card h3{
+    font-family:'Space Grotesk',sans-serif;font-size:15px;margin:0 0 14px 0;font-weight:600;
+  }
+  .arc-field{
+    background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
+    padding:12px 14px;margin-bottom:10px;
+  }
+  .arc-field-label{font-size:11px;color:var(--muted);margin-bottom:6px;display:flex;justify-content:space-between;}
+  .arc-field-row{display:flex;align-items:center;gap:8px;}
+  .arc-field input[type=number]{
+    flex:1;background:none;border:none;outline:none;color:var(--text);
+    font-family:var(--mono);font-size:19px;min-width:0;
+  }
+  .arc-token-select{
+    background:var(--panel);border:1px solid var(--line);color:var(--text);
+    font-family:'Inter',sans-serif;font-weight:600;font-size:13px;
+    padding:8px 10px;border-radius:9px;cursor:pointer;
+  }
+  .arc-swap-arrow{
+    display:flex;justify-content:center;margin:-4px 0;position:relative;z-index:2;
+  }
+  .arc-swap-arrow button{
+    background:var(--panel-2);border:1px solid var(--line);color:var(--copper);
+    width:32px;height:32px;border-radius:9px;cursor:pointer;font-size:15px;
+  }
+  .arc-primary-btn{
+    width:100%;padding:13px;border:none;border-radius:12px;
+    background:var(--copper);color:#1A1206;font-weight:700;font-size:14.5px;
+    cursor:pointer;margin-top:6px;transition:background .12s ease;
+  }
+  .arc-primary-btn:hover{background:#D9924F;}
+  .arc-primary-btn:disabled{background:var(--line);color:var(--muted);cursor:not-allowed;}
+  .arc-secondary-btn{
+    width:100%;padding:11px;border:1px solid var(--line);border-radius:12px;
+    background:none;color:var(--text);font-weight:600;font-size:13px;cursor:pointer;
+    margin-top:8px;
+  }
+  .arc-secondary-btn:hover{border-color:var(--copper);color:var(--copper);}
+  .arc-muted-row{
+    display:flex;justify-content:space-between;font-size:12px;color:var(--muted);
+    margin-top:10px;font-family:var(--mono);
+  }
+  .arc-status{
+    font-size:12.5px;margin-top:12px;padding:10px 12px;border-radius:9px;
+    font-family:var(--mono);line-height:1.5;word-break:break-word;
+  }
+  .arc-status.info{background:rgba(63,167,150,.08);border:1px solid rgba(63,167,150,.3);color:var(--teal);}
+  .arc-status.error{background:rgba(226,87,76,.08);border:1px solid rgba(226,87,76,.3);color:var(--red);}
+  .arc-status.pending{background:rgba(201,128,63,.08);border:1px solid rgba(201,128,63,.3);color:var(--copper);}
+
+  .arc-pool-item{
+    background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
+    padding:12px 14px;margin-bottom:10px;font-size:13px;
+  }
+  .arc-pool-item .pair{font-weight:600;font-family:'Space Grotesk',sans-serif;margin-bottom:4px;}
+  .arc-pool-item .lp{font-family:var(--mono);font-size:11.5px;color:var(--muted);}
+
+  .arc-token-row{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 0;border-bottom:1px solid var(--line);
+  }
+  .arc-token-row:last-child{border-bottom:none;}
+  .arc-token-meta{font-family:var(--mono);font-size:11px;color:var(--muted);}
+  .arc-mini-btn{
+    background:var(--copper-soft);color:var(--copper);border:none;
+    padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;
+  }
+
+  .arc-config-toggle{
+    text-align:center;font-size:11.5px;color:var(--muted);margin-top:16px;cursor:pointer;
+    font-family:var(--mono);
+  }
+  .arc-config-toggle:hover{color:var(--copper);}
+  .arc-config-box{
+    margin-top:10px;
+  }
+  .arc-config-box input{
+    width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;
+    color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 11px;margin-bottom:8px;
+  }
+  .arc-config-label{font-size:11px;color:var(--muted);margin:8px 0 4px 0;}
+
+  select.arc-token-select option{background:var(--panel);color:var(--text);}
+
+  ::-webkit-scrollbar{height:4px;width:4px;}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+</style>
+
+<div id="arc-dex-root">
+  <div class="arc-topbar">
+    <div class="arc-logo">
+      <div class="arc-logo-mark">M</div>
+      <div>
+        <div class="arc-logo-text">Meridian</div>
+        <div class="arc-logo-sub">ARC TESTNET · x·y=k AMM</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="arc-net-badge off" id="arc-net-badge">
+        <span class="arc-net-dot off" id="arc-net-dot"></span>
+        <span id="arc-net-text">Bağlı Değil</span>
+      </div>
+      <button class="arc-connect-btn" id="arc-connect-btn">Cüzdan Bağla</button>
+    </div>
+  </div>
+
+  <div class="arc-ticker" id="arc-ticker">
+    <span>Arc Testnet · Chain ID <b>5042002</b></span>
+    <span>Gas Token <b>USDC</b></span>
+    <span id="arc-ticker-pools">Havuzlar yükleniyor…</span>
+  </div>
+
+  <div class="arc-shell">
+    <div class="arc-tabs">
+      <div class="arc-tab active" data-tab="swap">Swap</div>
+      <div class="arc-tab" data-tab="liquidity">Likidite Ekle</div>
+      <div class="arc-tab" data-tab="pools">Havuzlarım</div>
+      <div class="arc-tab" data-tab="faucet">Faucet</div>
+    </div>
+
+    <!-- SWAP TAB -->
+    <div class="arc-card" id="tab-swap">
+      <h3>Token Takası</h3>
+      <div class="arc-field">
+        <div class="arc-field-label"><span>Gönder</span><span id="swap-from-balance">Bakiye: —</span></div>
+        <div class="arc-field-row">
+          <input type="number" id="swap-amount-in" placeholder="0.0" oninput="arcEstimateSwap()">
+          <select class="arc-token-select" id="swap-token-from" onchange="arcOnTokenChange()"></select>
+        </div>
+      </div>
+      <div class="arc-swap-arrow"><button onclick="arcFlipSwap()">⇅</button></div>
+      <div class="arc-field">
+        <div class="arc-field-label"><span>Al (tahmini)</span><span id="swap-to-balance">Bakiye: —</span></div>
+        <div class="arc-field-row">
+          <input type="number" id="swap-amount-out" placeholder="0.0" disabled>
+          <select class="arc-token-select" id="swap-token-to" onchange="arcOnTokenChange()"></select>
+        </div>
+      </div>
+      <div class="arc-muted-row"><span>Ücret</span><span>%0.3</span></div>
+      <div class="arc-muted-row"><span>Kur</span><span id="swap-rate">—</span></div>
+      <button class="arc-primary-btn" id="swap-btn" onclick="arcDoSwap()">Cüzdanı Bağla</button>
+      <div id="swap-status"></div>
+    </div>
+
+    <!-- LIQUIDITY TAB -->
+    <div class="arc-card" id="tab-liquidity" style="display:none;">
+      <h3>Likidite Ekle</h3>
+      <div class="arc-field">
+        <div class="arc-field-label"><span>Token A</span><span id="liq-a-balance">Bakiye: —</span></div>
+        <div class="arc-field-row">
+          <input type="number" id="liq-amount-a" placeholder="0.0" oninput="arcEstimateLiquidity('a')">
+          <select class="arc-token-select" id="liq-token-a" onchange="arcOnTokenChange()"></select>
+        </div>
+      </div>
+      <div class="arc-field">
+        <div class="arc-field-label"><span>Token B</span><span id="liq-b-balance">Bakiye: —</span></div>
+        <div class="arc-field-row">
+          <input type="number" id="liq-amount-b" placeholder="0.0" oninput="arcEstimateLiquidity('b')">
+          <select class="arc-token-select" id="liq-token-b" onchange="arcOnTokenChange()"></select>
+        </div>
+      </div>
+      <div class="arc-muted-row"><span>Havuz Oranı</span><span id="liq-ratio">Yeni havuz</span></div>
+      <button class="arc-primary-btn" id="liq-btn" onclick="arcAddLiquidity()">Cüzdanı Bağla</button>
+      <div id="liq-status"></div>
+    </div>
+
+    <!-- POOLS TAB -->
+    <div class="arc-card" id="tab-pools" style="display:none;">
+      <h3>Likidite Pozisyonlarım</h3>
+      <div id="pools-list"><div class="arc-token-meta">Cüzdan bağlayın.</div></div>
+      <button class="arc-secondary-btn" onclick="arcLoadMyPools()">Yenile</button>
+    </div>
+
+    <!-- FAUCET TAB -->
+    <div class="arc-card" id="tab-faucet" style="display:none;">
+      <h3>Test Token Muslugu</h3>
+      <div class="arc-token-meta" style="margin-bottom:10px;">Test tokenlarından her biri için 1000 adet cüzdanınıza basılır.</div>
+      <div id="faucet-list"></div>
+      <div class="arc-config-label">Yeni test tokeni ekle (adres)</div>
+      <div class="arc-field-row" style="margin-bottom:6px;">
+        <input type="text" id="add-token-address" placeholder="0x..." style="flex:1;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 11px;">
+      </div>
+      <button class="arc-secondary-btn" onclick="arcAddCustomToken()">Token Ekle</button>
+      <div id="faucet-status"></div>
+    </div>
+
+    <div class="arc-config-toggle" id="arc-config-toggle-btn" onclick="arcToggleConfig()">⚙ Kontrat Ayarları</div>
+    <div class="arc-config-box arc-card" id="arc-config-box" style="display:none;">
+      <div class="arc-config-label">Router Adresi</div>
+      <input type="text" id="cfg-router" placeholder="0x...">
+      <div class="arc-config-label">Factory Adresi</div>
+      <input type="text" id="cfg-factory" placeholder="0x...">
+      <button class="arc-primary-btn" onclick="arcSaveConfig()">Kaydet (herkes için geçerli olur)</button>
+      <div id="cfg-status"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ARC_CHAIN_ID_DEC = 5042002;
+const ARC_CHAIN_ID_HEX = '0x' + ARC_CHAIN_ID_DEC.toString(16);
+const ARC_RPC = 'https://rpc.testnet.arc.network';
+const ARC_EXPLORER = 'https://testnet.arcscan.app';
+
+const ERC20_ABI = [
+  "function name() view returns (string)",
+  "function symbol() view returns (string)",
+  "function decimals() view returns (uint8)",
+  "function balanceOf(address) view returns (uint256)",
+  "function approve(address,uint256) returns (bool)",
+  "function allowance(address,address) view returns (uint256)",
+  "function transfer(address,uint256) returns (bool)"
+];
+const TESTTOKEN_ABI = ERC20_ABI.concat(["function faucet()"]);
+const FACTORY_ABI = [
+  "function getPair(address,address) view returns (address)",
+  "function createPair(address,address) returns (address)",
+  "function allPairsLength() view returns (uint256)",
+  "function allPairs(uint256) view returns (address)"
+];
+const ROUTER_ABI = [
+  "function addLiquidity(address,address,uint256,uint256,uint256,uint256,address,uint256) returns (uint256,uint256,uint256)",
+  "function removeLiquidity(address,address,uint256,uint256,uint256,address,uint256) returns (uint256,uint256)",
+  "function swapExactTokensForTokens(uint256,uint256,address[],address,uint256) returns (uint256[])",
+  "function getAmountsOut(uint256,address[]) view returns (uint256[])"
+];
+const PAIR_ABI = [
+  "function getReserves() view returns (uint112,uint112,uint32)",
+  "function token0() view returns (address)",
+  "function token1() view returns (address)",
+  "function balanceOf(address) view returns (uint256)",
+  "function totalSupply() view returns (uint256)",
+  "function approve(address,uint256) returns (bool)"
+];
+
+// Depolama katmani: Claude artifact onizlemesinde window.storage kullanilir,
+// index.html kendi basina (dosya olarak veya bir sitede) acildiginda ise
+// tarayicinin localStorage'ina otomatik gecer.
+const arcStorage = (function(){
+  const hasArtifactStorage = typeof window.storage !== 'undefined' && window.storage && typeof window.storage.set === 'function';
+  if (hasArtifactStorage) return window.storage;
+  return {
+    async get(key){
+      const raw = localStorage.getItem('arc-dex::' + key);
+      if (raw === null) throw new Error('not found');
+      return { key, value: raw, shared: true };
+    },
+    async set(key, value){
+      localStorage.setItem('arc-dex::' + key, value);
+      return { key, value, shared: true };
+    },
+    async delete(key){
+      localStorage.removeItem('arc-dex::' + key);
+      return { key, deleted: true, shared: true };
+    },
+    async list(prefix){
+      const keys = [];
+      for (let i=0;i<localStorage.length;i++){
+        const k = localStorage.key(i);
+        if (k.startsWith('arc-dex::' + (prefix||''))) keys.push(k.replace('arc-dex::',''));
+      }
+      return { keys, shared: true };
+    }
+  };
+})();
+
+let provider, signer, userAddress;
+let CONFIG = {
+  router: '0x9352Bb36C93DC0A8638F250f77cbB5B9A32F7d04',
+  factory: '0xd88551ac320493d045Bb7EC51311a0A9cD6f500e'
+};
+let TOKENS = [
+  { symbol: 'ARCA', address: '0x4E195F4Fc2678657414d6467EEA6432A30500231', decimals: 18 },
+  { symbol: 'ARCB', address: '0x58B5f658133124aAD0B49eFF503296141c1dAd73', decimals: 18 },
+  { symbol: 'USDC', address: '0x3600000000000000000000000000000000000000', decimals: 6 },
+  { symbol: 'EURC', address: '0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a', decimals: 6 }
+];
+let activeTab = 'swap';
+
+function $(id){ return document.getElementById(id); }
+
+async function arcInit(){
+  try {
+    const cfg = await arcStorage.get('arc-dex-config', true);
+    if (cfg && cfg.value) CONFIG = JSON.parse(cfg.value);
+  } catch(e){}
+  try {
+    const tk = await arcStorage.get('arc-dex-tokens', true);
+    if (tk && tk.value) TOKENS = JSON.parse(tk.value);
+  } catch(e){}
+  $('cfg-router').value = CONFIG.router || '';
+  $('cfg-factory').value = CONFIG.factory || '';
+  arcRenderTokenSelects();
+  arcRenderFaucetList();
+  arcUpdateTicker();
+}
+
+function arcToggleConfig(){
+  const box = $('arc-config-box');
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
+
+async function arcSaveConfig(){
+  CONFIG.router = $('cfg-router').value.trim();
+  CONFIG.factory = $('cfg-factory').value.trim();
+  try {
+    await arcStorage.set('arc-dex-config', JSON.stringify(CONFIG), true);
+    $('cfg-status').innerHTML = '<div class="arc-status info">Kaydedildi. Artık tüm kullanıcılar bu kontratları görecek.</div>';
+  } catch(e){
+    $('cfg-status').innerHTML = '<div class="arc-status error">Kaydedilemedi: '+e.message+'</div>';
+  }
+}
+
+function arcRenderTokenSelects(){
+  const selects = ['swap-token-from','swap-token-to','liq-token-a','liq-token-b'];
+  selects.forEach(id=>{
+    const sel = $(id);
+    const prev = sel.value;
+    sel.innerHTML = '';
+    TOKENS.forEach(t=>{
+      const opt = document.createElement('option');
+      opt.value = t.address; opt.textContent = t.symbol;
+      sel.appendChild(opt);
+    });
+    if (prev) sel.value = prev;
+  });
+  if (TOKENS.length > 1) $('swap-token-to').selectedIndex = 1;
+  if (TOKENS.length > 1) $('liq-token-b').selectedIndex = 1;
+}
+
+const NON_MINTABLE_TOKENS = [
+  '0x3600000000000000000000000000000000000000', // USDC
+  '0x89b50855aa3be2f677cd6303cec089b5f319d72a'  // EURC
+];
+
+function arcRenderFaucetList(){
+  const list = $('faucet-list');
+  list.innerHTML = '';
+  if (TOKENS.length === 0){
+    list.innerHTML = '<div class="arc-token-meta">Henüz token eklenmedi. Aşağıdan test token adresi ekleyin.</div>';
+    return;
+  }
+  TOKENS.forEach(t=>{
+    const row = document.createElement('div');
+    row.className = 'arc-token-row';
+    row.innerHTML = `<div><div style="font-weight:600;">${t.symbol}</div><div class="arc-token-meta">${t.address.slice(0,6)}…${t.address.slice(-4)}</div></div>`;
+    const isNonMintable = NON_MINTABLE_TOKENS.includes(t.address.toLowerCase());
+    if (isNonMintable){
+      const link = document.createElement('a');
+      link.href = 'https://faucet.circle.com/'; link.target = '_blank';
+      link.className = 'arc-mini-btn'; link.style.textDecoration = 'none'; link.style.display = 'inline-block';
+      link.textContent = 'Circle Faucet';
+      row.appendChild(link);
+    } else {
+      const btn = document.createElement('button');
+      btn.className = 'arc-mini-btn'; btn.textContent = 'Mint';
+      btn.onclick = () => arcMintToken(t.address, btn);
+      row.appendChild(btn);
+    }
+    list.appendChild(row);
+  });
+}
+
+async function arcAddCustomToken(){
+  const addr = $('add-token-address').value.trim();
+  if (!ethers.utils.isAddress(addr)){
+    $('faucet-status').innerHTML = '<div class="arc-status error">Geçersiz adres.</div>';
+    return;
+  }
+  if (TOKENS.find(t=>t.address.toLowerCase() === addr.toLowerCase())){
+    $('faucet-status').innerHTML = '<div class="arc-status error">Bu token zaten ekli.</div>';
+    return;
+  }
+  try {
+    const p = provider || new ethers.providers.JsonRpcProvider(ARC_RPC);
+    const c = new ethers.Contract(addr, ERC20_ABI, p);
+    const symbol = await c.symbol();
+    const decimals = await c.decimals();
+    TOKENS.push({ symbol, address: addr, decimals });
+    await arcStorage.set('arc-dex-tokens', JSON.stringify(TOKENS), true);
+    arcRenderTokenSelects();
+    arcRenderFaucetList();
+    $('add-token-address').value = '';
+    $('faucet-status').innerHTML = '<div class="arc-status info">'+symbol+' eklendi (herkes görecek).</div>';
+  } catch(e){
+    $('faucet-status').innerHTML = '<div class="arc-status error">Token okunamadı: '+e.message+'</div>';
+  }
+}
+
+async function arcMintToken(addr, btn){
+  if (!signer){ arcConnect(); return; }
+  btn.textContent = '...';
+  try {
+    const c = new ethers.Contract(addr, TESTTOKEN_ABI, signer);
+    const tx = await c.faucet();
+    await tx.wait();
+    btn.textContent = 'Mint';
+    $('faucet-status').innerHTML = '<div class="arc-status info">1000 token cüzdanına gönderildi.</div>';
+  } catch(e){
+    btn.textContent = 'Mint';
+    $('faucet-status').innerHTML = '<div class="arc-status error">'+(e.reason||e.message)+'</div>';
+  }
+}
+
+// ---- Wallet connect ----
+async function arcConnect(){
+  if (!window.ethereum){
+    alert('MetaMask veya uyumlu bir cüzdan bulunamadı.');
+    return;
+  }
+  try {
+    await window.ethereum.request({ method: 'eth_requestAccounts' });
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    await arcEnsureNetwork();
+    signer = provider.getSigner();
+    userAddress = await signer.getAddress();
+    $('arc-connect-btn').textContent = userAddress.slice(0,6)+'…'+userAddress.slice(-4);
+    $('arc-connect-btn').classList.add('connected');
+    arcRefreshNetworkBadge(true);
+    arcRefreshAllBalances();
+    ['swap-btn','liq-btn'].forEach(id=>$(id).textContent = id==='swap-btn' ? 'Takas Et' : 'Likidite Ekle');
+  } catch(e){
+    console.error(e);
+  }
+}
+
+async function arcEnsureNetwork(){
+  try {
+    await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: ARC_CHAIN_ID_HEX }] });
+  } catch(switchErr){
+    if (switchErr.code === 4902){
+      await window.ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [{
+          chainId: ARC_CHAIN_ID_HEX,
+          chainName: 'Arc Testnet',
+          nativeCurrency: { name: 'USDC', symbol: 'USDC', decimals: 18 },
+          rpcUrls: [ARC_RPC],
+          blockExplorerUrls: [ARC_EXPLORER]
+        }]
+      });
+    }
+  }
+}
+
+function arcRefreshNetworkBadge(connected){
+  const badge = $('arc-net-badge'), dot = $('arc-net-dot'), txt = $('arc-net-text');
+  if (connected){
+    badge.classList.remove('off'); dot.classList.remove('off');
+    txt.textContent = 'Arc Testnet';
+  } else {
+    badge.classList.add('off'); dot.classList.add('off');
+    txt.textContent = 'Bağlı Değil';
+  }
+}
+
+if (window.ethereum){
+  window.ethereum.on && window.ethereum.on('accountsChanged', ()=>location.reload());
+  window.ethereum.on && window.ethereum.on('chainChanged', ()=>location.reload());
+}
+
+$('arc-connect-btn').addEventListener('click', arcConnect);
+
+// ---- Tabs ----
+document.querySelectorAll('.arc-tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.arc-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    ['swap','liquidity','pools','faucet'].forEach(name=>{
+      $('tab-'+name).style.display = name === tab.dataset.tab ? 'block' : 'none';
+    });
+    activeTab = tab.dataset.tab;
+    if (activeTab === 'pools') arcLoadMyPools();
+  });
+});
+
+function arcGetToken(address){
+  return TOKENS.find(t=>t.address.toLowerCase() === (address||'').toLowerCase());
+}
+
+async function arcRefreshAllBalances(){
+  if (!signer) return;
+  for (const t of TOKENS){
+    try {
+      const c = new ethers.Contract(t.address, ERC20_ABI, provider);
+      const bal = await c.balanceOf(userAddress);
+      t.balance = ethers.utils.formatUnits(bal, t.decimals);
+    } catch(e){}
+  }
+  arcOnTokenChange();
+}
+
+function arcOnTokenChange(){
+  const fromAddr = $('swap-token-from').value, toAddr = $('swap-token-to').value;
+  const from = arcGetToken(fromAddr), to = arcGetToken(toAddr);
+  $('swap-from-balance').textContent = 'Bakiye: ' + (from && from.balance ? Number(from.balance).toFixed(4) : '—');
+  $('swap-to-balance').textContent = 'Bakiye: ' + (to && to.balance ? Number(to.balance).toFixed(4) : '—');
+  const a = arcGetToken($('liq-token-a').value), b = arcGetToken($('liq-token-b').value);
+  $('liq-a-balance').textContent = 'Bakiye: ' + (a && a.balance ? Number(a.balance).toFixed(4) : '—');
+  $('liq-b-balance').textContent = 'Bakiye: ' + (b && b.balance ? Number(b.balance).toFixed(4) : '—');
+  arcEstimateSwap();
+}
+
+function arcFlipSwap(){
+  const f = $('swap-token-from'), t = $('swap-token-to');
+  const tmp = f.value; f.value = t.value; t.value = tmp;
+  arcOnTokenChange();
+}
+
+async function arcGetRouter(withSigner){
+  return new ethers.Contract(CONFIG.router, ROUTER_ABI, withSigner ? signer : (provider || new ethers.providers.JsonRpcProvider(ARC_RPC)));
+}
+async function arcGetFactory(withSigner){
+  return new ethers.Contract(CONFIG.factory, FACTORY_ABI, withSigner ? signer : (provider || new ethers.providers.JsonRpcProvider(ARC_RPC)));
+}
+
+let swapDebounce;
+function arcEstimateSwap(){
+  clearTimeout(swapDebounce);
+  swapDebounce = setTimeout(arcEstimateSwapNow, 350);
+}
+async function arcEstimateSwapNow(){
+  if (!CONFIG.router){ $('swap-rate').textContent = 'Router ayarlanmadı'; return; }
+  const fromAddr = $('swap-token-from').value, toAddr = $('swap-token-to').value;
+  const from = arcGetToken(fromAddr), to = arcGetToken(toAddr);
+  const amtStr = $('swap-amount-in').value;
+  if (!from || !to || !amtStr || Number(amtStr) <= 0){ $('swap-amount-out').value=''; $('swap-rate').textContent='—'; return; }
+  try {
+    const router = await arcGetRouter(false);
+    const amountIn = ethers.utils.parseUnits(amtStr, from.decimals);
+    const amounts = await router.getAmountsOut(amountIn, [from.address, to.address]);
+    const out = ethers.utils.formatUnits(amounts[amounts.length-1], to.decimals);
+    $('swap-amount-out').value = Number(out).toFixed(6);
+    $('swap-rate').textContent = `1 ${from.symbol} ≈ ${(out/amtStr).toFixed(6)} ${to.symbol}`;
+  } catch(e){
+    $('swap-amount-out').value = '';
+    $('swap-rate').textContent = 'Bu çift için havuz yok';
+  }
+}
+
+async function arcDoSwap(){
+  if (!signer){ arcConnect(); return; }
+  if (!CONFIG.router){ $('swap-status').innerHTML = '<div class="arc-status error">Önce Router adresini Kontrat Ayarları\'ndan girin.</div>'; return; }
+  const from = arcGetToken($('swap-token-from').value), to = arcGetToken($('swap-token-to').value);
+  const amtStr = $('swap-amount-in').value;
+  if (!from || !to || !amtStr) return;
+  const btn = $('swap-btn'); btn.disabled = true;
+  const statusEl = $('swap-status');
+  try {
+    const amountIn = ethers.utils.parseUnits(amtStr, from.decimals);
+    const tokenC = new ethers.Contract(from.address, ERC20_ABI, signer);
+    const allowance = await tokenC.allowance(userAddress, CONFIG.router);
+    if (allowance.lt(amountIn)){
+      statusEl.innerHTML = '<div class="arc-status pending">Onay (approve) bekleniyor…</div>';
+      const approveTx = await tokenC.approve(CONFIG.router, ethers.constants.MaxUint256);
+      await approveTx.wait();
+    }
+    statusEl.innerHTML = '<div class="arc-status pending">Takas işlemi bekleniyor…</div>';
+    const router = await arcGetRouter(true);
+    const minOut = ethers.utils.parseUnits((Number($('swap-amount-out').value || 0) * 0.98).toFixed(to.decimals <18?to.decimals:18), to.decimals);
+    const deadline = Math.floor(Date.now()/1000) + 600;
+    const tx = await router.swapExactTokensForTokens(amountIn, minOut, [from.address, to.address], userAddress, deadline);
+    await tx.wait();
+    statusEl.innerHTML = '<div class="arc-status info">Takas tamamlandı ✓</div>';
+    $('swap-amount-in').value=''; $('swap-amount-out').value='';
+    arcRefreshAllBalances();
+  } catch(e){
+    statusEl.innerHTML = '<div class="arc-status error">'+(e.reason||e.message)+'</div>';
+  }
+  btn.disabled = false;
+}
+
+async function arcEstimateLiquidity(which){
+  if (!CONFIG.factory) return;
+  const a = arcGetToken($('liq-token-a').value), b = arcGetToken($('liq-token-b').value);
+  if (!a || !b) return;
+  try {
+    const factory = await arcGetFactory(false);
+    const pairAddr = await factory.getPair(a.address, b.address);
+    if (pairAddr === ethers.constants.AddressZero){
+      $('liq-ratio').textContent = 'Yeni havuz (ilk likidite)';
+      return;
+    }
+    const pair = new ethers.Contract(pairAddr, PAIR_ABI, provider || new ethers.providers.JsonRpcProvider(ARC_RPC));
+    const [r0, r1] = await pair.getReserves();
+    const token0 = (await pair.token0()).toLowerCase();
+    const [reserveA, reserveB] = token0 === a.address.toLowerCase() ? [r0, r1] : [r1, r0];
+    const reserveAf = Number(ethers.utils.formatUnits(reserveA, a.decimals));
+    const reserveBf = Number(ethers.utils.formatUnits(reserveB, b.decimals));
+    $('liq-ratio').textContent = `1 ${a.symbol} ≈ ${(reserveBf/reserveAf).toFixed(6)} ${b.symbol}`;
+    if (which === 'a' && $('liq-amount-a').value){
+      $('liq-amount-b').value = (Number($('liq-amount-a').value) * reserveBf/reserveAf).toFixed(6);
+    } else if (which === 'b' && $('liq-amount-b').value){
+      $('liq-amount-a').value = (Number($('liq-amount-b').value) * reserveAf/reserveBf).toFixed(6);
+    }
+  } catch(e){}
+}
+
+async function arcAddLiquidity(){
+  if (!signer){ arcConnect(); return; }
+  if (!CONFIG.router){ $('liq-status').innerHTML = '<div class="arc-status error">Önce Router adresini Kontrat Ayarları\'ndan girin.</div>'; return; }
+  const a = arcGetToken($('liq-token-a').value), b = arcGetToken($('liq-token-b').value);
+  const amtA = $('liq-amount-a').value, amtB = $('liq-amount-b').value;
+  if (!a || !b || !amtA || !amtB) return;
+  const btn = $('liq-btn'); btn.disabled = true;
+  const statusEl = $('liq-status');
+  try {
+    const amountA = ethers.utils.parseUnits(amtA, a.decimals);
+    const amountB = ethers.utils.parseUnits(amtB, b.decimals);
+    for (const [tok, amt] of [[a, amountA],[b, amountB]]){
+      const c = new ethers.Contract(tok.address, ERC20_ABI, signer);
+      const allowance = await c.allowance(userAddress, CONFIG.router);
+      if (allowance.lt(amt)){
+        statusEl.innerHTML = `<div class="arc-status pending">${tok.symbol} onaylanıyor…</div>`;
+        const tx = await c.approve(CONFIG.router, ethers.constants.MaxUint256);
+        await tx.wait();
+      }
+    }
+    statusEl.innerHTML = '<div class="arc-status pending">Likidite ekleniyor…</div>';
+    const router = await arcGetRouter(true);
+    const deadline = Math.floor(Date.now()/1000) + 600;
+    const tx = await router.addLiquidity(a.address, b.address, amountA, amountB, 0, 0, userAddress, deadline);
+    await tx.wait();
+    statusEl.innerHTML = '<div class="arc-status info">Likidite eklendi ✓</div>';
+    $('liq-amount-a').value=''; $('liq-amount-b').value='';
+    arcRefreshAllBalances();
+  } catch(e){
+    statusEl.innerHTML = '<div class="arc-status error">'+(e.reason||e.message)+'</div>';
+  }
+  btn.disabled = false;
+}
+
+async function arcLoadMyPools(){
+  const list = $('pools-list');
+  if (!signer || !CONFIG.factory){
+    list.innerHTML = '<div class="arc-token-meta">Cüzdan bağlayın ve kontrat ayarlarını girin.</div>';
+    return;
+  }
+  list.innerHTML = '<div class="arc-token-meta">Yükleniyor…</div>';
+  try {
+    const factory = await arcGetFactory(false);
+    const count = (await factory.allPairsLength()).toNumber();
+    let html = '';
+    for (let i=0;i<count;i++){
+      const pairAddr = await factory.allPairs(i);
+      const pair = new ethers.Contract(pairAddr, PAIR_ABI, provider);
+      const lpBal = await pair.balanceOf(userAddress);
+      if (lpBal.isZero()) continue;
+      const t0addr = await pair.token0(); const t1addr = await pair.token1();
+      const t0 = arcGetToken(t0addr), t1 = arcGetToken(t1addr);
+      const sym0 = t0 ? t0.symbol : t0addr.slice(0,6);
+      const sym1 = t1 ? t1.symbol : t1addr.slice(0,6);
+      html += `<div class="arc-pool-item">
+        <div class="pair">${sym0} / ${sym1}</div>
+        <div class="lp">LP: ${ethers.utils.formatUnits(lpBal,18)}</div>
+        <button class="arc-mini-btn" style="margin-top:8px;" onclick="arcRemoveLiquidity('${pairAddr}','${t0addr}','${t1addr}')">Likiditeyi Çek</button>
+      </div>`;
+    }
+    list.innerHTML = html || '<div class="arc-token-meta">Henüz likidite pozisyonunuz yok.</div>';
+  } catch(e){
+    list.innerHTML = '<div class="arc-token-meta">Yüklenemedi: '+e.message+'</div>';
+  }
+}
+
+async function arcRemoveLiquidity(pairAddr, t0addr, t1addr){
+  try {
+    const pair = new ethers.Contract(pairAddr, PAIR_ABI, signer);
+    const lpBal = await pair.balanceOf(userAddress);
+    const allowance = await pair.allowance ? await pair.allowance(userAddress, CONFIG.router) : 0;
+    const approveTx = await pair.approve(CONFIG.router, lpBal);
+    await approveTx.wait();
+    const router = await arcGetRouter(true);
+    const deadline = Math.floor(Date.now()/1000) + 600;
+    const tx = await router.removeLiquidity(t0addr, t1addr, lpBal, 0, 0, userAddress, deadline);
+    await tx.wait();
+    arcLoadMyPools();
+    arcRefreshAllBalances();
+  } catch(e){
+    alert('Hata: ' + (e.reason || e.message));
+  }
+}
+
+async function arcUpdateTicker(){
+  if (!CONFIG.factory){ $('arc-ticker-pools').textContent = 'Havuzlar için kontrat ayarlarını girin'; return; }
+  try {
+    const factory = await arcGetFactory(false);
+    const count = (await factory.allPairsLength()).toNumber();
+    $('arc-ticker-pools').innerHTML = `Aktif Havuzlar <b>${count}</b>`;
+  } catch(e){
+    $('arc-ticker-pools').textContent = 'Havuz verisi alınamadı';
+  }
+}
+
+arcInit();
+</script>
