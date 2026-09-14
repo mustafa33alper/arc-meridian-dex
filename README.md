@@ -4,9 +4,9 @@ A Uniswap V2-style automated market maker (AMM) decentralized exchange
 running on Arc Testnet. Anyone can connect a wallet, swap test tokens, and
 provide liquidity.
 > Note: This project was originally announced as "Arc Meridian." In
-> documentation and content going forward we use \\\\\\\*\\\\\\\*"Meridian, built on
-> Arc"\\\\\\\*\\\\\\\*, in line with Circle's
-> \\\\\\\[brand guidelines](https://www.arc.io/brand-guidelines-and-partner-toolkit).
+> documentation and content going forward we use \\\\\\\\\\\\\\\*\\\\\\\\\\\\\\\*"Meridian, built on
+> Arc"\\\\\\\\\\\\\\\*\\\\\\\\\\\\\\\*, in line with Circle's
+> \\\\\\\\\\\\\\\[brand guidelines](https://www.arc.io/brand-guidelines-and-partner-toolkit).
 Features
 Wallet connection (MetaMask / any EIP-1193-compatible wallet), with
 automatic silent reconnect on page refresh
@@ -67,7 +67,7 @@ Add Arc Explorer's (Blockscout-based) settings to `hardhat.config.js`:
 ```js
 etherscan: {
   apiKey: { arcTestnet: "any-value" }, // Blockscout usually doesn't require a real key
-  customChains: \\\\\\\[{
+  customChains: \\\\\\\\\\\\\\\[{
     network: "arcTestnet",
     chainId: 5042002,
     urls: {
@@ -79,7 +79,7 @@ etherscan: {
 ```
 Then, for each contract:
 ```
-npx hardhat verify --network arcTestnet <CONTRACT\\\\\\\_ADDRESS> \\\\\\\[constructor args]
+npx hardhat verify --network arcTestnet <CONTRACT\\\\\\\\\\\\\\\_ADDRESS> \\\\\\\\\\\\\\\[constructor args]
 ```
 (Arc Explorer's exact API endpoint and requirements may change — check the
 docs on `testnet.arcscan.app` for the latest.)
@@ -99,8 +99,8 @@ All state-changing functions (`mint`, `burn`, `swaaap`) are protected
 against reentrancy with a `lock` modifier.
 The `swap` function in `ArcPair.sol` enforces Uniswap V2's core
 invariant check, verifying that `k` does not decrease after fees
-(`balance0Adjusted \\\\\\\* balance1Adjusted >= reserve0 \\\\\\\* reserve1 \\\\\\\* FEE\\\\\\\_DENOMINATOR^2`).
-The first liquidity provider has `MINIMUM\\\\\\\_LIQUIDITY` worth of LP tokens
+(`balance0Adjusted \\\\\\\\\\\\\\\* balance1Adjusted >= reserve0 \\\\\\\\\\\\\\\* reserve1 \\\\\\\\\\\\\\\* FEE\\\\\\\\\\\\\\\_DENOMINATOR^2`).
+The first liquidity provider has `MINIMUM\\\\\\\\\\\\\\\_LIQUIDITY` worth of LP tokens
 permanently locked, following the standard Uniswap V2 mitigation
 against division-by-zero and "first depositor" attacks.
 These contracts have not undergone an independent audit. The scope
